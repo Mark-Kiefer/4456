@@ -45,7 +45,7 @@ def send_heartbeat():
                 stub = heartbeat_service_pb2_grpc.ViewServiceStub(channel)
 
                 # prepare heartbeat
-                message = "backup"
+                message = "backup_1"
                 request = heartbeat_service_pb2.HeartbeatRequest(service_identifier=message)
 
                 # call write request
