@@ -19,13 +19,12 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
 
         # dictionary
         self.data = {}
+        self.is_primary = False
 
     # function to send write request to backups, receive ack, apply write, and send ack
     def Write(self, request, context):
 
-        global is_primary
-
-        if is_primary:
+        if self.is_primary:
 
             try:
 
@@ -41,7 +40,7 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             # server not up
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNAVAILABLE:
-                    print("Error: Backup server is unavailable")
+                    print("Error: Server_1 is unavailable")
                     context.set_code(grpc.StatusCode.UNAVAILABLE)
 
                 else:
@@ -63,7 +62,7 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             # server not up
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNAVAILABLE:
-                    print("Error: Backup server is unavailable")
+                    print("Error: Server 3 is unavailable")
                     context.set_code(grpc.StatusCode.UNAVAILABLE)
 
                 else:
@@ -85,7 +84,7 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             # server not up
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNAVAILABLE:
-                    print("Error: Backup server is unavailable")
+                    print("Error: Server 4 is unavailable")
                     context.set_code(grpc.StatusCode.UNAVAILABLE)
 
                 else:
@@ -94,22 +93,19 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
                     context.set_details(e.details())
 
             # received ack
-            if response_1.ack == "ack" and response_3.ack == "ack" and response_4.ack == "ack":
+            if (response_1.ack == "ack" and response_3.ack == "ack") or (response_1.ack == "ack" and response_4.ack == "ack") or (response_3.ack == "ack" and response_4.ack == "ack"):
 
                 # apply write
                 self.data[request.key] = request.value
 
                 # update log
-                with open("primary.txt", 'a') as file:
+                with open("server_2.txt", 'a') as file:
                     file.write(f"{request.key} {request.value}\n")
 
                 # return ack
                 return replication_pb2.WriteResponse(ack="ack")
-    
-    # function to apply write, and send ack
-    def Write(self, request, context):
 
-        if not is_primary:
+        if not self.is_primary:
 
             # apply write
             self.data[request.key] = request.value

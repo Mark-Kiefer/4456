@@ -11,24 +11,21 @@ from concurrent import futures
 import time
 import threading
 
-is_primary = True
-
 class SequenceServicer(replication_pb2_grpc.SequenceServicer):
 
     def __init__(self):
 
         # dictionary
         self.data = {}
+        self.is_primary = True
 
     # function to send write request to backups, receive ack, apply write, and send ack
     def Write(self, request, context):
 
-        global is_primary
-
-        if is_primary:
+        if self.is_primary:
 
             try:
-
+            
                 # connect to server 2
                 with grpc.insecure_channel('localhost:50052') as channel:
 
@@ -41,13 +38,10 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             # server not up
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNAVAILABLE:
-                    print("Error: Backup server is unavailable")
-                    context.set_code(grpc.StatusCode.UNAVAILABLE)
+                    print("Error: Server 2 is unavailable")
 
                 else:
                     print(f"Error: {e.code()}")
-                    context.set_code(e.code())
-                    context.set_details(e.details())
 
             try:
 
@@ -63,13 +57,10 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             # server not up
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNAVAILABLE:
-                    print("Error: Backup server is unavailable")
-                    context.set_code(grpc.StatusCode.UNAVAILABLE)
+                    print("Error: Server 3 is unavailable")
 
                 else:
                     print(f"Error: {e.code()}")
-                    context.set_code(e.code())
-                    context.set_details(e.details())
 
             try:
 
@@ -85,31 +76,29 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             # server not up
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNAVAILABLE:
-                    print("Error: Backup server is unavailable")
-                    context.set_code(grpc.StatusCode.UNAVAILABLE)
+                    print("Error: Server 4 is unavailable")
 
                 else:
                     print(f"Error: {e.code()}")
-                    context.set_code(e.code())
-                    context.set_details(e.details())
 
             # received ack
-            if response_2.ack == "ack" and response_3.ack == "ack" and response_4.ack == "ack":
+            if (response_2 and response_2.ack == "ack" and response_3 and response_3.ack == "ack") or (response_2 and response_2.ack == "ack" and response_4 and response_4.ack == "ack") or (response_3 and response_3.ack == "ack" and response_4 and response_4.ack == "ack"):
 
                 # apply write
                 self.data[request.key] = request.value
 
                 # update log
-                with open("primary.txt", 'a') as file:
+                with open("server_1.txt", 'a') as file:
                     file.write(f"{request.key} {request.value}\n")
 
                 # return ack
                 return replication_pb2.WriteResponse(ack="ack")
-    
-    # function to apply write, and send ack
-    def Write(self, request, context):
+            
+            else:
+                context.set_code(grpc.StatusCode.UNAVAILABLE)
+        
 
-        if not is_primary:
+        if not self.is_primary:
 
             # apply write
             self.data[request.key] = request.value
