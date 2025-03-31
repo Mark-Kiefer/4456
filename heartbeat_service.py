@@ -81,7 +81,7 @@ def check_servers():
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     heartbeat_service_pb2_grpc.add_ViewServiceServicer_to_server(ViewServiceServicer(), server)
-    server.add_insecure_port("[::]:50053")
+    server.add_insecure_port("[::]:50056")
 
     try:
         print("Server started")
