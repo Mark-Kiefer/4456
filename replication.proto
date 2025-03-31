@@ -1,9 +1,13 @@
 syntax = "proto3";
 
 package replication;
+import "google/protobuf/empty.proto";
+
+package viewservice;
 
 service Sequence {
   rpc Write (WriteRequest) returns (WriteResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (google.protobuf.Empty);
 }
 
 message WriteRequest {
@@ -14,5 +18,4 @@ message WriteRequest {
 message WriteResponse {
   string ack = 1;
 } 
-
 

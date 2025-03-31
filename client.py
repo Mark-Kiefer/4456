@@ -10,6 +10,8 @@ import replication_pb2_grpc
 def run(key, value): 
     
     try:
+
+        # check if server 1 is primary
         with grpc.insecure_channel('localhost:50051') as channel:
 
             # create stub
@@ -19,7 +21,8 @@ def run(key, value):
             request = replication_pb2.WriteRequest(key=key,value=value)
 
             # call write request
-            response = stub.Write(request)
+            metadata = (("source", "client"),)
+            response = stub.Write(request, metadata=metadata)
 
             # received ack
             if response.ack == "ack":
@@ -28,6 +31,75 @@ def run(key, value):
                 with open("client.txt", 'a') as file:
                     file.write(f"{key} {value}\n")
 
+            if response.ack == "Nack":
+
+                # check if server 2 is primary
+                with grpc.insecure_channel('localhost:50052') as channel:
+
+                    # create stub
+                    stub = replication_pb2_grpc.SequenceStub(channel)
+
+                    # prepare write request
+                    request = replication_pb2.WriteRequest(key=key,value=value)
+
+                    # call write request
+                    metadata = (("source", "client"),)
+                    response = stub.Write(request, metadata=metadata)
+
+                    # received ack
+                    if response.ack == "ack":
+
+                        # update log
+                        with open("client.txt", 'a') as file:
+                            file.write(f"{key} {value}\n")
+
+                    if response.ack == "Nack":
+
+                        # check if server 3 is primary
+                        with grpc.insecure_channel('localhost:50053') as channel:
+
+                            # create stub
+                            stub = replication_pb2_grpc.SequenceStub(channel)
+
+                            # prepare write request
+                            request = replication_pb2.WriteRequest(key=key,value=value)
+
+                            # call write request
+                            metadata = (("source", "client"),)
+                            response = stub.Write(request, metadata=metadata)
+
+                            # received ack
+                            if response.ack == "ack":
+
+                                # update log
+                                with open("client.txt", 'a') as file:
+                                    file.write(f"{key} {value}\n")
+
+                            if response.ack == "Nack":
+
+                                # check if server 4 is primary
+                                with grpc.insecure_channel('localhost:50054') as channel:
+
+                                    # create stub
+                                    stub = replication_pb2_grpc.SequenceStub(channel)
+
+                                    # prepare write request
+                                    request = replication_pb2.WriteRequest(key=key,value=value)
+
+                                    # call write request
+                                    metadata = (("source", "client"),)
+                                    response = stub.Write(request, metadata=metadata)
+
+                                    # received ack
+                                    if response.ack == "ack":
+
+                                        # update log
+                                        with open("client.txt", 'a') as file:
+                                            file.write(f"{key} {value}\n")
+
+                                    if response.ack == "Nack":  
+                                        print("Error: Server is unavailable")   
+                                                        
     # server not up
     except grpc.RpcError as e:
         if e.code() == grpc.StatusCode.UNAVAILABLE:
@@ -35,6 +107,7 @@ def run(key, value):
 
         else:
             print(f"Error: {e.code()}")
+
 
 
 if __name__ == "__main__":

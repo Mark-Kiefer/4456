@@ -17,10 +17,25 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
 
         # dictionary
         self.data = {}
-        self.is_primary = True
+        self.is_primary = False
 
     # function to send write request to backups, receive ack, apply write, and send ack
     def Write(self, request, context):
+
+        # get metadata for information on client or server
+        metadata = dict(context.invocation_metadata())
+        source = metadata.get("source", "unknown")  
+
+        if source == "client" and self.is_primary:
+            pass
+
+        elif source == "client" and not self.is_primary:
+            return replication_pb2.WriteResponse(ack="Nack")
+        
+        elif source == "heartbeat":
+            self.is_primary = True
+
+            return replication_pb2.WriteResponse(ack="ack")
 
         if self.is_primary:
 
@@ -33,7 +48,8 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
                     stub = replication_pb2_grpc.SequenceStub(channel)
 
                     # call write request
-                    response_2 = stub.Write(request)
+                    metadata = (("source", "server"),)
+                    response_2 = stub.Write(request, metadata=metadata)
         
             # server not up
             except grpc.RpcError as e:
@@ -52,7 +68,8 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
                     stub = replication_pb2_grpc.SequenceStub(channel)
 
                     # call write request
-                    response_3 = stub.Write(request)
+                    metadata = (("source", "server"),)
+                    response_3 = stub.Write(request, metadata=metadata)
         
             # server not up
             except grpc.RpcError as e:
@@ -71,7 +88,8 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
                     stub = replication_pb2_grpc.SequenceStub(channel)
 
                     # call write request
-                    response_4 = stub.Write(request)
+                    metadata = (("source", "server"),)
+                    response_4 = stub.Write(request, metadata=metadata)
         
             # server not up
             except grpc.RpcError as e:
@@ -81,8 +99,28 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
                 else:
                     print(f"Error: {e.code()}")
 
+            ack_count = 0
+
+            try:
+                if response_2.ack == "ack":
+                    ack_count += 1
+            except:
+                pass
+
+            try:
+                if response_3.ack == "ack":
+                    ack_count += 1
+            except:
+                pass
+            
+            try:
+                if response_4.ack == "ack":
+                    ack_count += 1
+            except:
+                pass
+
             # received ack
-            if (response_2 and response_2.ack == "ack" and response_3 and response_3.ack == "ack") or (response_2 and response_2.ack == "ack" and response_4 and response_4.ack == "ack") or (response_3 and response_3.ack == "ack" and response_4 and response_4.ack == "ack"):
+            if ack_count >= 2:
 
                 # apply write
                 self.data[request.key] = request.value
