@@ -1,6 +1,6 @@
-# Coded by Mark Kiefer (251237385)
-# CS 4459B - Assignment 2
-# Due by March 11, 2025
+# Coded by Mark Kiefer, Nancy Laseko, and Evan Buckspan
+# CS 4459B - Project
+# Due by April 4, 2025
 
 import sys
 import grpc
@@ -30,16 +30,18 @@ def connect(server, key, value):
                     with open("client.txt", 'a') as file:
                         file.write(f"{key} {value}\n")
 
-                else:
-                    response.ack = "Nack"
-
                 return response
         
     # server not up
     except grpc.RpcError as e:
         if e.code() == grpc.StatusCode.UNAVAILABLE:
-            response.ack = "Nack"
-            return response
+
+            # for returning Nack when server is unavailable
+            class DummyResponse:
+                def __init__(self):
+                    self.ack = "Nack"
+
+            return DummyResponse()
 
         else:
             print(f"Error: {e.code()}")
@@ -61,3 +63,4 @@ if __name__ == "__main__":
         exit(0)
 
     run(sys.argv[1], sys.argv[2])
+    

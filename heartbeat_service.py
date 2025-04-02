@@ -1,6 +1,6 @@
-# Coded by Mark Kiefer (251237385)
-# CS 4459B - Assignment 2
-# Due by March 11, 2025
+# Coded by Mark Kiefer, Nancy Laseko, and Evan Buckspan
+# CS 4459B - Project
+# Due by April 4, 2025
 
 import grpc
 import replication_pb2

@@ -1,6 +1,6 @@
-# Coded by Mark Kiefer (251237385)
-# CS 4459B - Assignment 2
-# Due by March 11, 2025
+# Coded by Mark Kiefer, Nancy Laseko, and Evan Buckspan
+# CS 4459B - Project
+# Due by April 4, 2025
 
 import grpc
 import replication_pb2
@@ -22,7 +22,7 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
     # function to send write request to backups, receive ack, apply write, and send ack
     def Write(self, request, context):
 
-        # get metadata for information on client or server
+        # get metadata for information on sender, (client, server, heartbeat)
         metadata = dict(context.invocation_metadata())
         source = metadata.get("source", "unknown")  
 
@@ -99,6 +99,7 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
                 else:
                     print(f"Error: {e.code()}")
 
+            # count number of acks received
             ack_count = 0
 
             try:
@@ -119,7 +120,7 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             except:
                 pass
 
-            # received ack
+            # must receive at least two acks to send ack back to client
             if ack_count >= 2:
 
                 # apply write
@@ -134,6 +135,7 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
             
             else:
                 context.set_code(grpc.StatusCode.UNAVAILABLE)
+                return replication_pb2.WriteResponse(ack="Nack")
         
 
         if not self.is_primary:

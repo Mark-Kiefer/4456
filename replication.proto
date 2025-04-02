@@ -1,9 +1,6 @@
 syntax = "proto3";
 
 package replication;
-import "google/protobuf/empty.proto";
-
-package viewservice;
 
 service Sequence {
   rpc Write (WriteRequest) returns (WriteResponse);
