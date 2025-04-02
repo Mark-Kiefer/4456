@@ -30,12 +30,16 @@ def connect(server, key, value):
                     with open("client.txt", 'a') as file:
                         file.write(f"{key} {value}\n")
 
+                else:
+                    response.ack = "Nack"
+
                 return response
         
     # server not up
     except grpc.RpcError as e:
         if e.code() == grpc.StatusCode.UNAVAILABLE:
-            print("Error: Server is unavailable")
+            response.ack = "Nack"
+            return response
 
         else:
             print(f"Error: {e.code()}")
