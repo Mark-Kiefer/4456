@@ -131,6 +131,10 @@ class SequenceServicer(replication_pb2_grpc.SequenceServicer):
 
                 # return ack
                 return replication_pb2.WriteResponse(ack="ack")
+            
+            else:
+                context.set_code(grpc.StatusCode.UNAVAILABLE)
+                return replication_pb2.WriteResponse(ack="Nack")
 
         if not self.is_primary:
 

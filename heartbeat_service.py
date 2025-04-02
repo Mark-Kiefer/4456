@@ -59,7 +59,6 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                         # received ack
                         if response.ack == "ack":
-                            server1_up = True
                             primary = "1"
                             print("Server 1 is primary")
 
@@ -69,6 +68,8 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                     else:
                         print(f"Error: {e.code()}")
+
+            server1_up = True
 
         if identifier == "Server_2":
             server2_time = time
@@ -91,7 +92,6 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                         # received ack
                         if response.ack == "ack":
-                            server2_up = True
                             primary = "2"
                             print("Server 2 is primary")
 
@@ -101,6 +101,8 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                     else:
                         print(f"Error: {e.code()}")
+
+            server2_up = True
 
         if identifier == "Server_3":
             server3_time = time
@@ -123,7 +125,6 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                         # received ack
                         if response.ack == "ack":
-                            server3_up = True
                             primary = "3"
                             print("Server 3 is primary")
 
@@ -133,6 +134,8 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                     else:
                         print(f"Error: {e.code()}")
+
+            server3_up = True
 
         if identifier == "Server_4":
             server4_time = time
@@ -155,7 +158,6 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                         # received ack
                         if response.ack == "ack":
-                            server4_up = True
                             primary = "4"
                             print("Server 4 is primary")
 
@@ -165,6 +167,8 @@ class ViewServiceServicer(heartbeat_service_pb2_grpc.ViewServiceServicer):
 
                     else:
                         print(f"Error: {e.code()}")
+
+            server4_up = True
 
         # update log
         with open("heartbeat.txt", 'a') as file:
@@ -191,7 +195,8 @@ def check_servers():
                     file.write(f"Server 1 might be down. Latest heartbeat received at {server1_time}\n")
                 
                 server1_up = False
-                election = True
+                if primary == "1":
+                    election = True
 
         # server 2
         if server2_up:
@@ -202,7 +207,9 @@ def check_servers():
                     file.write(f"Server 2 might be down. Latest heartbeat received at {server2_time}\n")
 
                 server2_up = False
-                election = True
+
+                if primary == "2":
+                    election = True
 
         # server 3
         if server3_up:
@@ -213,7 +220,9 @@ def check_servers():
                     file.write(f"Server 3 might be down. Latest heartbeat received at {server3_time}\n")
                 
                 server3_up = False
-                election = True
+
+                if primary == "3":
+                    election = True
 
         # server 4
         if server4_up:
@@ -224,7 +233,9 @@ def check_servers():
                     file.write(f"Server 4 might be down. Latest heartbeat received at {server4_time}\n")
 
                 server4_up = False
-                election = True
+
+                if primary == "4":
+                    election = True
 
         # election
         if election:
